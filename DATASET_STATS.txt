@@ -1,0 +1,2 @@
+Starter dataset generated from the current SAGE behavioral specification and examples.
+Split: 80% train / 10% validation / 10% test.
