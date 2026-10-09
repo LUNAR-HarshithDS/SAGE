@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sage</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <header>
+      <h1>Sage</h1>
+      <select id="model-size">
+        <option value="1.7b">1.7B</option>
+        <option value="4b">4B</option>
+        <option value="8b">8B</option>
+      </select>
+    </header>
+
+    <div id="messages"></div>
+
+    <pre id="thinking-box" class="hidden"></pre>
+
+    <footer>
+      <input id="chat-input" type="text" placeholder="Message Sage..." autocomplete="off" />
+      <button id="send-btn">Send</button>
+    </footer>
+    <div id="metrics"></div>
+  </div>
+  <script type="module" src="main.js"></script>
+</body>
+</html>
