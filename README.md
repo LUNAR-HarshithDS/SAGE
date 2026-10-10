@@ -7,6 +7,11 @@
 - [Model Strategy](#model-strategy)
 - [Project Structure](#project-structure)
 - [Requirements](#requirements)
+- [Getting Started](#getting-started)
+- [Development Principles](#development-principles)
+- [Troubleshooting](#troubleshooting)
+- [Project Satus](#project-status)
+- [SAGE Setup Guide](#sage-setup-guide)
 
 
 
@@ -159,7 +164,7 @@ A license has not been specified here. Check the repository for an existing `LIC
 
 Developed as an independent AI assistant project.
 
-# SAGE Setup Guide
+## SAGE Setup Guide
 
 This guide explains how to install, configure, and run SAGE on macOS, Windows, and Linux.
 
@@ -167,17 +172,6 @@ SAGE is a modular local AI assistant that uses request routing, deterministic to
 
 > **Compatibility notice:** The Python backend and the model inference runtime have different platform requirements. The MLX runtime is intended for Apple silicon. Windows and Linux users must verify that their configured inference backend supports their operating system and hardware before attempting to run the full model pipeline.
 
-## Table of Contents
-
-1. Requirements
-2. Download SAGE
-3. Create a Python Environment
-4. Install Dependencies
-5. Configure Models
-6. Validate the Installation
-7. Run SAGE
-8. Troubleshooting
-9. Security and Data Management
 
 ## 1. Requirements
 
