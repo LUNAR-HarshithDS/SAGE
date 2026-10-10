@@ -1,4 +1,20 @@
-# SAGE
+## Table of Contents
+
+- [SAGE](#sage)
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Architecture](#architecture)
+- [Model Strategy](#model-strategy)
+- [Project Structure](#project-structure)
+- [Requirements](#project-structure)
+
+
+
+
+
+
+
+## SAGE
 
 **A Local AI Assistant for Reasoning, Research, and Task Execution**
 
@@ -107,7 +123,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Follow **[SETUP.md](SETUP.md)** for model installation, configuration, validation, and launch instructions.
+Follow the Setup Guide for model installation, configuration, validation, and launch instructions.
 
 ## Development Principles
 
@@ -129,7 +145,7 @@ For setup and runtime problems:
 4. Review the terminal output for model-loading and dependency errors.
 5. Confirm that the configured model paths match the actual files on your machine.
 
-See [SETUP.md](SETUP.md) for the setup procedure.
+See the Setup Guide for the setup procedure.
 
 ## Project Status
 
