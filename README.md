@@ -6,7 +6,7 @@
 - [Architecture](#architecture)
 - [Model Strategy](#model-strategy)
 - [Project Structure](#project-structure)
-- [Requirements](#project-structure)
+- [Requirements](#requirements)
 
 
 
