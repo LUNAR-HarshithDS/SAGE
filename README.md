@@ -166,88 +166,109 @@ Developed as an independent AI assistant project.
 
 ## SAGE Setup Guide
 
-This guide explains how to install, configure, and run SAGE on macOS, Windows, and Linux.
+This guide covers preparing, configuring, and running SAGE on macOS,
+Windows, and Linux.
 
-SAGE is a modular local AI assistant that uses request routing, deterministic tools, language models, and a dedicated response-phrasing model.
+SAGE is a modular local AI assistant. Its repository includes request
+routing, model selection, a native MLX model runtime, and an
+experimental bridge/server path for llama.cpp-compatible models.
 
-> **Compatibility notice:** The Python backend and the model inference runtime have different platform requirements. The MLX runtime is intended for Apple silicon. Windows and Linux users must verify that their configured inference backend supports their operating system and hardware before attempting to run the full model pipeline.
+> **Compatibility status:** The native runtime in
+> `sage_model_runtime.py` imports MLX and is designed for Apple silicon.
+> Do not assume that this runtime works on Windows or Linux unchanged.
+> The Windows/Linux llama.cpp route requires a compatible GGUF model, a
+> working `llama-server`, and a runtime configuration that matches the
+> checked-out version of SAGE. Treat those platforms as experimental
+> until the full request pipeline has been tested.
 
 
-## 1. Requirements
+## 1. Before You Begin
 
-### All platforms
+### General requirements
 
-* Git
-* Python 3
-* Internet access for downloading dependencies and model files
-* Sufficient disk space and memory for the selected models
-* The model weights and configuration required by your installation
+-   Git
+-   Python 3
+-   Internet access to install packages and download model files
+-   Enough memory and disk space for the model you intend to run
+-   A terminal or command-line application
 
-Use a Python version supported by the project's dependencies. If installation fails because of Python compatibility, check the package requirements before changing versions.
+Use a Python version supported by the dependencies in the current
+repository. If a package fails to install, check that package's
+supported Python versions rather than repeatedly retrying the same
+command.
 
-### Platform-specific requirements
+### Platform overview
 
-| Platform | Requirements                                                                                                                                       |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| macOS    | Apple Silicon is recommended for the MLX-based runtime.                                                                                            |
-| Windows  | A compatible model runtime is required; the MLX-based macOS setup should not be assumed to work unchanged.                                         |
-| Linux    | A compatible CPU or GPU runtime is required. MLX provides separate Linux CPU and CUDA installation options, but SAGE integration must be verified. |
+  -----------------------------------------------------------------------
+  Platform                Recommended starting    Important limitation
+                          point                   
+  ----------------------- ----------------------- -----------------------
+  macOS on Apple silicon  Native MLX runtime      Best match for the
+                                                  current native runtime.
 
-## 2. Download SAGE
+  Windows                 Experimental llama.cpp  Requires a compatible
+                          / `llama-server` route  GGUF model and matching
+                                                  server/runtime
+                                                  configuration.
 
-Open a terminal or command-line application.
+  Linux                   Experimental llama.cpp  The native SAGE runtime
+                          route, or a separately  and dependencies must
+                          validated MLX setup     be checked for the
+                                                  selected backend and
+                                                  hardware.
+  -----------------------------------------------------------------------
+
+## 2. Get the Source Code
+
+Open Terminal (macOS/Linux), PowerShell (Windows), or your preferred
+shell.
 
 Clone the repository:
 
-```bash
+``` bash
 git clone https://github.com/LUNAR-HarshithDS/SAGE.git
 cd SAGE
 ```
 
-If you already have a local copy, navigate to its project directory instead.
-
-Confirm that the main project files are present:
-
-```text
-sage.py
-input_interpreter.py
-function_router.py
-model_router.py
-request_router.py
-sage_model_runtime.py
-```
-
-The repository may contain additional modules, configuration files, and data directories.
+If you already have a local checkout, change into that directory
+instead. Before changing files, confirm that you are in the repository
+root and that `sage.py`, `model_router.py`, and `sage_model_runtime.py`
+are present.
 
 ## 3. Create a Python Environment
 
-A virtual environment keeps SAGE's dependencies separate from other Python projects.
+A virtual environment isolates SAGE's Python packages from other
+projects.
 
 ### macOS
 
-Open Terminal and run:
-
-```bash
+``` bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 ```
 
-### Windows — PowerShell
+### Windows --- PowerShell
 
-Open PowerShell in the SAGE directory and run:
+Run these commands from the SAGE repository directory:
 
-```powershell
+``` powershell
 py -3 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 ```
 
-If PowerShell blocks activation, you can use Command Prompt instead.
+If PowerShell blocks activation, either allow it for the current
+PowerShell process only:
 
-### Windows — Command Prompt
+``` powershell
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
+```
 
-```bat
+Or use Command Prompt:
+
+``` bat
 py -3 -m venv .venv
 .venv\Scripts\activate.bat
 python -m pip install --upgrade pip
@@ -255,187 +276,244 @@ python -m pip install --upgrade pip
 
 ### Linux
 
-Open a terminal and run:
-
-```bash
+``` bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 ```
 
-If creating the virtual environment fails, install your distribution's Python virtual-environment package and retry.
+On Debian or Ubuntu, if virtual-environment creation fails because
+`venv` is missing:
 
-For example, on Ubuntu or Debian:
-
-```bash
+``` bash
 sudo apt update
 sudo apt install python3-venv python3-pip git
 ```
 
-Keep the virtual environment activated while installing dependencies and running SAGE.
+Keep the environment activated while installing dependencies and running
+SAGE.
 
 ## 4. Install Dependencies
 
-From the project root, install the base dependencies:
+First inspect the dependency files in the repository:
 
-```bash
-python -m pip install -r requirements.txt
+``` text
+requirements.txt
+requirements-models.txt
 ```
 
-Inspect the model-related dependencies:
+The current `requirements.txt` is focused on MLX-LM training
+dependencies. It is not a complete, cross-platform lockfile for every
+possible SAGE runtime.
 
-```bash
-python -c "print(open('requirements-models.txt').read())"
+### macOS --- native MLX runtime
+
+On Apple silicon, install the native model dependencies in the active
+virtual environment:
+
+``` bash
+python -m pip install --upgrade pip
+python -m pip install "mlx-lm[train]" huggingface_hub
 ```
 
-If your selected model backend requires those packages, install them:
+MLX is designed primarily for Apple silicon. Use the project's MLX
+runtime and its configured model/adapter paths only when the model files
+and installed package versions match the code.
 
-```bash
-python -m pip install -r requirements-models.txt
-```
+### Windows --- experimental server route
 
-Do not assume that every dependency works on every operating system. If a package fails to install, check its platform requirements and the Python version it supports.
+Do not install MLX as though it were a normal Windows dependency. For
+Windows, use a compatible build of `llama.cpp` that provides
+`llama-server`, and select a GGUF model compatible with that server.
 
-### MLX runtime
+The server installation is separate from Python dependencies. Follow the
+official llama.cpp instructions for your Windows architecture and
+GPU/CPU backend. Confirm that `llama-server --version` works before
+attempting to connect SAGE to it.
 
-MLX is designed for Apple silicon. On a compatible Mac, install the project's required MLX packages through the appropriate requirements file or environment configuration.
+The Python package list for the server route depends on the current SAGE
+code and may differ from the MLX training dependencies. Do not blindly
+install the macOS requirements file on Windows.
 
-Linux users should consult the official MLX installation documentation if they intend to use its CPU or CUDA backend. Windows users should select a supported inference backend rather than assuming that the MLX setup works unchanged.
+### Linux --- experimental server route
 
-## 5. Configure Models
+For a portable starting point, use a compatible `llama.cpp` build with
+`llama-server` and a supported GGUF model. Follow the official
+build/install instructions for your Linux distribution and hardware.
 
-SAGE is designed around multiple model roles.
+MLX also has Linux support paths for selected configurations, but that
+does not automatically make the current SAGE MLX runtime or its full
+model pipeline Linux-compatible. Validate the exact runtime,
+dependencies, and model configuration before relying on it.
 
-| Model                            | Intended role                       |
-| -------------------------------- | ----------------------------------- |
-| Qwen3-4B                         | General-purpose reasoning           |
-| Qwen3-8B                         | More demanding reasoning and coding |
-| Qwen3-1.7B with the SAGE adapter | Response phrasing                   |
+## 5. Configure the Model Runtime
 
-The actual models, model identifiers, quantisation formats, and adapter paths depend on the runtime configuration.
+SAGE's intended model roles are:
 
-Before launching SAGE:
+  Model role                         Intended purpose
+  ---------------------------------- -------------------------------------
+  Qwen3-4B                           General reasoning
+  Qwen3-8B                           More demanding reasoning and coding
+  Qwen3-1.7B with the SAGE adapter   Response phrasing
 
-1. Confirm which model identifiers the model router expects.
-2. Download or locate the required model files.
-3. Set the paths expected by the runtime.
-4. Configure the 1.7B adapter if the phrasing pipeline uses it.
-5. Ensure the 4B and 8B models are configured without adapters if that is the intended setup.
-6. Confirm that your selected inference backend supports the models and hardware.
+The model names above describe the intended design, not a guarantee that
+every format or backend is configured automatically. Model identifiers,
+quantization, adapter format, and paths must match the runtime selected
+for your platform.
 
-Review these files when troubleshooting:
+### macOS
 
-```text
-settings.json
-model_router.py
-sage_model_runtime.py
-sage_model_api.py
-sage_runtime_prompt.py
-```
+1.  Check the model identifiers and paths used by `model_router.py` and
+    `sage_model_runtime.py`.
+2.  Ensure the required model files are available.
+3.  Configure the 1.7B adapter path if the phrasing stage uses it.
+4.  Keep the 4B and 8B models adapter-free if that is the configuration
+    you intend to use.
+5.  Confirm that the selected MLX model and adapter formats match the
+    installed MLX-LM version.
 
-Do not publish private conversation data, local credentials, or machine-specific secrets.
+### Windows and Linux
 
-## 6. Validate the Installation
+1.  Choose a GGUF model that your installed `llama-server` supports.
+2.  Start the server using the model path and settings required by your
+    setup.
+3.  Check the server's listening address and port.
+4.  Make sure SAGE's bridge/runtime configuration targets that exact
+    address and port.
+5.  Confirm whether the current code supports every stage you need,
+    especially the separate 1.7B phrasing stage and its adapter. An MLX
+    adapter is not automatically interchangeable with a
+    llama.cpp-compatible adapter.
+6.  Do not assume the full 4B/8B reasoning plus 1.7B phrasing workflow
+    is working until you have tested it end to end.
 
-Run a Python syntax check from the repository root:
+Do not commit model weights, private prompts, credentials, or local-only
+configuration containing secrets.
 
-```bash
+## 6. Run SAGE
+
+With the virtual environment activated, first check the Python files for
+syntax errors.
+
+### macOS
+
+``` bash
 python -m compileall -q .
-```
-
-If the command completes without errors, the Python files passed this syntax check. This does not verify that the model runtime, dependencies, or complete application work correctly.
-
-If the project has a test suite, run its documented tests as well.
-
-## 7. Run SAGE
-
-The expected main entry point is `sage.py`.
-
-With the virtual environment activated, try:
-
-```bash
 python sage.py
 ```
 
-If SAGE does not start, inspect the error output and the entry-point logic in `sage.py`. Follow the launch procedure implemented by the current version of the project.
+The launch command assumes `sage.py` is the intended entry point in your
+current checkout. If it exits, use the traceback to identify missing
+dependencies, model paths, or configuration.
 
-### Basic verification
+### Windows
 
-Once the application starts, test:
+If your checkout includes the Windows launcher scripts, open PowerShell
+in the repository root and follow `WINDOWS.md` for the server startup
+and launch sequence. The launcher cannot supply a missing model or
+automatically convert an MLX adapter.
 
-* A basic conversational request
-* A mathematical question
-* A request requiring multi-step reasoning
-* A coding question
-* A request that uses the response-phrasing pipeline
+You can run a syntax check independently:
 
-Verify that the expected model or tool is selected and that the request completes successfully.
+``` powershell
+python -m compileall -q .
+```
+
+### Linux
+
+``` bash
+python -m compileall -q .
+python sage.py
+```
+
+These commands check syntax and attempt to launch the application; they
+do not prove that the selected inference backend or all model stages
+work. If your Linux setup uses `llama-server`, start and verify that
+service according to your configuration before launching SAGE.
+
+## 7. Validate the Installation
+
+Test the application in stages:
+
+1.  **Startup:** SAGE launches without import or configuration errors.
+2.  **Basic response:** Send a simple conversational request.
+3.  **Reasoning:** Try a multi-step question.
+4.  **Coding:** Try a small programming task.
+5.  **Model routing:** Confirm the expected model is selected for simple
+    and demanding requests.
+6.  **Phrasing stage:** If enabled, confirm that the 1.7B
+    response-phrasing stage completes.
+7.  **Resource cleanup:** Confirm that models are released when no
+    longer needed, where the selected runtime supports that behavior.
+
+A successful Python syntax check is not an end-to-end test. Record
+platform, Python version, runtime/backend, model format, and any error
+output when reporting a problem.
 
 ## 8. Troubleshooting
 
-### Python or dependency errors
+### `ModuleNotFoundError`
 
-Check the active Python version:
+Activate the project's virtual environment, then install the
+dependencies required by the selected runtime. Check whether the missing
+package is platform-specific.
 
-```bash
-python --version
-python -m pip --version
+### MLX import or installation failure
+
+MLX is not a universal cross-platform backend. On Windows, use the
+configured supported alternative rather than trying to force the native
+MLX runtime to load. On Linux, verify that the installed MLX package
+supports your hardware and that SAGE's runtime is compatible with it.
+
+### Model or adapter not found
+
+Check the configured path, spelling, permissions, and model format. Make
+sure the model actually exists locally and is supported by the selected
+runtime.
+
+### `llama-server` connection failure
+
+Confirm that the server is installed, the model loaded successfully, and
+the configured host/port match. Test the server directly before
+troubleshooting SAGE's bridge.
+
+### Out-of-memory errors or very slow generation
+
+Use a smaller or more heavily quantized model, close unnecessary
+applications, reduce the context length, and avoid loading several large
+models at once. Memory requirements depend on model size, quantization,
+context length, and runtime.
+
+### SAGE exits immediately
+
+Read the complete terminal traceback. Check Python version,
+virtual-environment activation, configuration, model paths, and server
+status. Do not suppress the error before identifying its cause.
+
+## 9. Security and Git Hygiene
+
+Before committing or publishing changes:
+
+-   Never commit passwords, API keys, access tokens, or private
+    credentials.
+-   Exclude private conversation histories and personal data.
+-   Keep large model weights and training artifacts out of Git unless
+    you intentionally distribute them.
+-   Review local settings and generated files before committing.
+-   Maintain a suitable `.gitignore`.
+-   Inspect staged changes before pushing:
+
+``` bash
+git status
+git diff --cached
 ```
-
-Confirm the virtual environment is active, then reinstall the required dependencies.
-
-### Model not found
-
-Check the model identifier, directory, file permissions, and configured path. Make sure the model files are actually available on the machine.
-
-### Adapter loading errors
-
-Confirm that the adapter path exists and matches the intended model. Models configured without adapters should not be given unnecessary adapter paths.
-
-### Insufficient memory
-
-Large models can consume substantial memory. Close unnecessary applications, avoid loading multiple models simultaneously where possible, and confirm that the runtime releases models when they are no longer needed.
-
-### MLX import or runtime errors
-
-MLX is intended for Apple Silicon, with separate supported installation paths for Linux. A Windows installation or an unsupported hardware configuration may require a different inference backend and corresponding changes to SAGE's runtime.
-
-### Python syntax or import errors
-
-Run:
-
-```bash
-python -m compileall -q
-```
-
-Then inspect the traceback, dependency versions, and module imports.
-
-### Application exits immediately
-
-Read the complete terminal error. Check the model paths, configuration files, environment activation, and launch command.
-
-## 9. Security and Data Management
-
-Before committing changes or publishing your repository:
-
-* Never commit passwords, API keys, or access tokens.
-* Exclude private conversation histories and personal data.
-* Keep large model weights and training artefacts out of Git unless you intentionally distribute them.
-* Review local settings and data files before committing.
-* Maintain an appropriate `.gitignore`.
-* Inspect staged changes before pushing them to GitHub.
-
-## 10. Development
-
-When modifying SAGE, keep request interpretation, function routing, model selection, runtime execution, and response generation separate.
-
-Test changes to the relevant modules before relying on them in the main assistant workflow.
-
-For model-routing changes, test both a basic request and a more demanding request to identify regressions.
 
 ## Additional Resources
 
-* Python virtual environments: https://docs.python.org/3/library/venv.html
-* MLX framework: https://github.com/ml-explore/mlx
-* SAGE repository: https://github.com/LUNAR-HarshithDS/SAGE
+-   SAGE repository: https://github.com/LUNAR-HarshithDS/SAGE
+-   Python virtual environments:
+    https://docs.python.org/3/library/venv.html
+-   MLX: https://github.com/ml-explore/mlx
+-   llama.cpp: https://github.com/ggml-org/llama.cpp
+
 
