@@ -96,7 +96,7 @@ Additional directories and files may be present for datasets, knowledge sources,
 
 The requirements depend on the selected inference backend and installed models.
 
-* macOS on Apple Silicon for the MLX-based setup described in this repository.
+* Any Windows/Mac/Linux Computer with at least 16 GB of RAM 
 * A supported Python version.
 * Git.
 * Python dependencies listed in the project's requirements files.
