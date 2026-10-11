@@ -1,0 +1,6 @@
+# Python dependencies for SAGE's Windows sidecar.
+# Model inference is provided by an external llama-server process.
+requests>=2.31,<3
+sympy>=1.12
+pypdf>=4
+youtube-transcript-api>=0.6

@@ -17,9 +17,22 @@ import time
 from dataclasses import dataclass, field
 from typing import Callable, Generator, Optional
 
-import mlx.core as mx
-from mlx_lm import load, stream_generate
-from mlx_lm.sample_utils import make_sampler
+# MLX is available on Apple silicon, but not on native Windows. Keep the
+# module importable so the cross-platform llama-server bridge can reuse the
+# shared GenerationEvent/GenerationResult data classes.
+try:
+    import mlx.core as mx
+    from mlx_lm import load, stream_generate
+    from mlx_lm.sample_utils import make_sampler
+    MLX_AVAILABLE = True
+    MLX_IMPORT_ERROR = None
+except ImportError as exc:
+    mx = None
+    load = None
+    stream_generate = None
+    make_sampler = None
+    MLX_AVAILABLE = False
+    MLX_IMPORT_ERROR = exc
 from model_router import ModelSpec
 
 
@@ -105,6 +118,12 @@ class SAGEModelRuntime:
             
     def load_model(self, spec: ModelSpec) -> None:
         """Load a base model, optionally with its LoRA adapter."""
+        if not MLX_AVAILABLE:
+            raise RuntimeError(
+                "The native SAGE runtime requires MLX, which is not available "
+                "on this platform. On Windows, start a compatible llama-server "
+                "and use sage_router_server.py with llama_bridge.py instead."
+            ) from MLX_IMPORT_ERROR
         with self._lock:
             self._validate_adapter(spec)
 
